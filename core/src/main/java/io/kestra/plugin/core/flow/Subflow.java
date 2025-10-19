@@ -182,6 +182,11 @@ public class Subflow extends Task implements ExecutableTask<Subflow.Output>, Chi
             inputs.putAll(runContext.render(this.inputs));
         }
 
+        // Auto-fill namespace from parent flow if missing or null
+        if (this.namespace == null || this.namespace.isEmpty()) {
+            this.namespace = currentFlow.getNamespace();
+        }
+
         return ExecutableUtils.subflowExecution(
             runContext,
             flowExecutorInterface,
