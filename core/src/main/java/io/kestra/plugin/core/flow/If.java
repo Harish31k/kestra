@@ -134,21 +134,51 @@ public class If extends Task implements FlowableTask<If.Output> {
         return subGraph;
     }
 
+//    @Override
+//    public List<Task> allChildTasks() {
+//        return Stream
+//            .concat(
+//                this.then != null ? this.then.stream() : Stream.empty(),
+//                Stream.concat(
+//                    this._else != null ? this._else.stream() : Stream.empty(),
+//                    Stream.concat(
+//                        this.errors != null ? this.errors.stream() : Stream.empty(),
+//                        this._finally != null ? this._finally.stream() : Stream.empty()
+//                    )
+//                )
+//            )
+//            .toList();
+//    }
     @Override
     public List<Task> allChildTasks() {
         return Stream
             .concat(
-                this.then != null ? this.then.stream() : Stream.empty(),
+                inheritNamespace(this.then),
                 Stream.concat(
-                    this._else != null ? this._else.stream() : Stream.empty(),
+                    inheritNamespace(this._else),
                     Stream.concat(
-                        this.errors != null ? this.errors.stream() : Stream.empty(),
-                        this._finally != null ? this._finally.stream() : Stream.empty()
+                        inheritNamespace(this.errors),
+                        inheritNamespace(this._finally)
                     )
                 )
             )
             .toList();
     }
+
+        private Stream<Task> inheritNamespace(List<Task> tasks) {
+            if (tasks == null) return Stream.empty();
+
+            return tasks.stream().map(task -> {
+                if (task instanceof ChildFlowInterface childFlow) {
+                    // only set namespace if null
+                    if (childFlow.getNamespace() == null) {
+                        ((Subflow) childFlow).setNamespace(this.getNamespace());
+                    }
+                }
+                return task;
+            });
+        }
+
 
     @Override
     public List<ResolvedTask> childTasks(RunContext runContext, TaskRun parentTaskRun) throws IllegalVariableEvaluationException {
